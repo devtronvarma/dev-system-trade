@@ -5,7 +5,11 @@ This module provides a flexible framework for backtesting trading strategies
 with multiple instruments and rules.
 """
 
-import matplotlib.pyplot as plt
+import sys
+import os
+# Add parent directory to path so we can import pysystemtrade modules
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from sysdata.sim.csv_futures_sim_data import csvFuturesSimData
 from sysdata.config.configdata import Config
 from systems.basesystem import System
@@ -226,6 +230,13 @@ class BacktestRunner:
             portfolio_returns: Returns object from system.accounts.portfolio()
             save_path: Optional path to save figure (e.g., 'backtest_results.png')
         """
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            print("\nWarning: matplotlib is not installed. Skipping plot generation.")
+            print("To enable plotting, install matplotlib: pip install matplotlib")
+            return
+
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10))
 
         # Cumulative returns
