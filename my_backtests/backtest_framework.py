@@ -3,6 +3,24 @@ Generalized Backtesting Framework for pysystemtrade
 
 This module provides a flexible framework for backtesting trading strategies
 with multiple instruments and rules.
+
+IMPORTANT: Configuration System
+================================
+This framework properly handles pysystemtrade's configuration inheritance.
+When you create a Config() object, it automatically loads all default settings
+from sysdata/config/defaults.yaml, including:
+- Optimizer functions (func parameter)
+- Cost constraints (ceiling_cost_SR, cost_multiplier)
+- Estimator configurations (correlation, mean, volatility)
+
+The framework MODIFIES these defaults rather than REPLACING them. This is
+critical - replacing config dicts will cause KeyError: 'func' and similar errors.
+
+Correct approach (used here):
+    my_config.instrument_weight_estimate["method"] = "shrinkage"
+
+Incorrect approach (will break):
+    my_config.instrument_weight_estimate = dict(method="shrinkage")
 """
 
 import matplotlib.pyplot as plt
@@ -140,20 +158,18 @@ class BacktestRunner:
             my_config.use_forecast_scale_estimates = True
             my_config.forecast_scalar_estimate["pool_instruments"] = self.config.forecast_scalar_pooling
 
-            # Forecast combining
+            # Forecast combining - use full optimizer configuration
             my_config.use_forecast_weight_estimates = True
-            my_config.forecast_weight_estimate = dict(
-                method=self.config.forecast_weight_method,
-                date_method="in_sample"
-            )
+            # Start with defaults from config, then override method
+            my_config.forecast_weight_estimate["method"] = self.config.forecast_weight_method
+            # Keep the default date_method from defaults.yaml (expanding)
             my_config.use_forecast_div_mult_estimates = True
 
-            # Portfolio/Instrument level
+            # Portfolio/Instrument level - use full optimizer configuration
             my_config.use_instrument_weight_estimates = True
-            my_config.instrument_weight_estimate = dict(
-                method=self.config.instrument_weight_method,
-                date_method="in_sample"
-            )
+            # Start with defaults from config, then override method
+            my_config.instrument_weight_estimate["method"] = self.config.instrument_weight_method
+            # Keep the default date_method from defaults.yaml (expanding)
             my_config.use_instrument_div_mult_estimates = True
         else:
             # Use equal weights everywhere
@@ -161,12 +177,12 @@ class BacktestRunner:
             my_config.forecast_scalar_estimate["pool_instruments"] = True
 
             my_config.use_forecast_weight_estimates = True
-            my_config.forecast_weight_estimate = dict(method="equal_weights")
+            my_config.forecast_weight_estimate["method"] = "equal_weights"
             my_config.use_forecast_div_mult_estimates = False
             my_config.forecast_div_multiplier = 1.0
 
             my_config.use_instrument_weight_estimates = True
-            my_config.instrument_weight_estimate = dict(method="equal_weights")
+            my_config.instrument_weight_estimate["method"] = "equal_weights"
             my_config.use_instrument_div_mult_estimates = False
             my_config.instrument_div_multiplier = 1.0
 

@@ -188,12 +188,65 @@ The difference shows your transaction costs impact.
 - Compare estimation methods (shrinkage vs equal weights)
 - Add custom trading rules (see `backtest_framework.py` for examples)
 
+## How the Configuration System Works
+
+### Important: Config Inheritance
+
+The framework uses pysystemtrade's default configuration system, which loads comprehensive settings from `sysdata/config/defaults.yaml`. **This is critical to understand**:
+
+1. **Default values are automatically loaded**: When you create a `Config()` object, it includes all optimizer settings, estimators, and parameters from `defaults.yaml`
+
+2. **We modify, not replace**: The framework **modifies** existing config dictionaries rather than replacing them. This preserves all the required parameters like:
+   - `func`: The optimizer function (e.g., `genericOptimiser`)
+   - `ceiling_cost_SR`: Cost constraints
+   - Correlation, mean, and volatility estimators
+
+3. **What gets customized**: When you set:
+   ```python
+   forecast_weight_method="shrinkage"
+   instrument_weight_method="shrinkage"
+   ```
+   The framework only overrides the `method` parameter while keeping all other defaults intact.
+
+### Why This Matters
+
+**❌ Wrong approach** (will cause `KeyError: 'func'`):
+```python
+my_config.instrument_weight_estimate = dict(
+    method="shrinkage",
+    date_method="in_sample"
+)  # This REPLACES the entire dict, losing 'func' and other params!
+```
+
+**✓ Correct approach** (used by this framework):
+```python
+my_config.instrument_weight_estimate["method"] = "shrinkage"
+# This MODIFIES the existing dict, keeping 'func' and all defaults
+```
+
+### Optimization Methods
+
+When `use_estimations=True`, the framework uses:
+
+- **`method="shrinkage"`**: Sophisticated optimization balancing historical returns with risk
+- **`method="handcraft"`**: Uses predefined rules with some optimization
+- **`date_method="expanding"`**: Uses all historical data up to each point (standard for backtesting)
+
+When `use_estimations=False`:
+- Uses equal weights for both rules and instruments
+- Much faster, good for quick tests
+- Simpler to understand results
+
 ## Troubleshooting
+
+**"KeyError: 'func'"**: This means the config inheritance was broken. Make sure you're using a recent version of the framework that properly modifies config dicts rather than replacing them.
 
 **"Instrument not found"**: Check spelling and ensure data exists in CSV files
 
 **"All NaN values"**: Rule might need volatility data - see MR Wings example for proper data configuration
 
-**Zero positions**: Instrument might be getting zero weight due to short history or high correlation
+**"Zero positions"**: Instrument might be getting zero weight due to short history or high correlation
 
-**Different results each run**: Normal if using estimation - uses expanding window that updates with data
+**"Different results each run"**: Normal if using estimation - uses expanding window that updates with data
+
+**"No objects to concatenate"**: Can occur if `date_method` is incompatible with data availability. The framework uses `"expanding"` by default which should work in most cases.
