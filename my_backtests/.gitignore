@@ -1,0 +1,14 @@
+# Ignore backtest outputs
+outputs/*.png
+outputs/*.csv
+outputs/*.html
+
+# Allow .gitkeep
+!outputs/.gitkeep
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore Jupyter checkpoints
+.ipynb_checkpoints/
