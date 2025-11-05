@@ -61,9 +61,9 @@ except ImportError:
     QUANTSTATS_AVAILABLE = False
 
 # Import all provided rules
-from systems.provided.rules.ewmac import ewmac_forecast_with_defaults as ewmac, ewmac_calc_vol
+from systems.provided.rules.ewmac import ewmac_forecast_with_defaults as ewmac, ewmac_calc_vol, ewmac as ewmac_raw
 from systems.provided.rules.mr_wings import mr_wings
-from systems.provided.rules.carry import carry
+from systems.provided.rules.carry import carry, relative_carry
 from systems.provided.rules.breakout import breakout
 from systems.provided.rules.accel import accel
 from systems.provided.rules.rel_mom import relative_momentum
@@ -826,6 +826,94 @@ def create_mrinasset_rule(horizon):
         data=["rawdata.get_cumulative_daily_vol_normalised_returns",
               "rawdata.normalised_price_for_asset_class"],
         other_args=dict(horizon=horizon, ewma_span=None)
+    ))
+
+
+def create_relmomentum_rule(horizon):
+    """
+    Create a Relative Momentum rule (cross-sectional momentum vs asset class).
+
+    This rule generates long signals when an instrument is outperforming its asset class
+    and short signals when underperforming. It's the opposite of mean reversion -
+    it follows relative strength.
+
+    Args:
+        horizon: Lookback period for measuring relative momentum (e.g., 10, 20, 40, 80)
+
+    Returns:
+        TradingRule object
+
+    Common configurations:
+        - Very Fast: horizon=10 (approximately 2 weeks)
+        - Fast: horizon=20 (approximately 1 month)
+        - Medium: horizon=40 (approximately 2 months)
+        - Slow: horizon=80 (approximately 3-4 months)
+
+    Note: ewma_span defaults to horizon/4 if not specified
+    """
+    return TradingRule(dict(
+        function=relative_momentum,
+        data=["rawdata.get_cumulative_daily_vol_normalised_returns",
+              "rawdata.normalised_price_for_asset_class"],
+        other_args=dict(horizon=horizon, ewma_span=None)
+    ))
+
+
+def create_assettrend_rule(Lfast):
+    """
+    Create an Asset Trend rule (EWMAC on asset class aggregate prices).
+
+    Instead of trading the instrument's own price trend, this rule trades based on
+    the trend of the entire asset class (e.g., all equity indices, all bonds).
+    This captures macro-level movements and regime shifts.
+
+    Args:
+        Lfast: Fast moving average period (e.g., 2, 4, 8, 16, 32, 64)
+
+    Returns:
+        TradingRule object
+
+    Common configurations:
+        - Very Fast: Lfast=2
+        - Fast: Lfast=4 or 8
+        - Medium: Lfast=16 or 32
+        - Slow: Lfast=64
+
+    Note: Lslow is automatically set to Lfast * 4
+    """
+    Lslow = Lfast * 4
+    return TradingRule(dict(
+        function=ewmac_raw,
+        data=["rawdata.normalised_price_for_asset_class",
+              "rawdata.daily_returns_volatility"],
+        other_args=dict(Lfast=Lfast, Lslow=Lslow)
+    ))
+
+
+def create_relcarry_rule(smooth_days=90):
+    """
+    Create a Relative Carry rule (carry vs asset class median).
+
+    This rule buys instruments with high carry relative to their asset class peers
+    and sells those with low relative carry. Only applicable to futures contracts
+    with roll data.
+
+    Args:
+        smooth_days: Smoothing period for carry signal (default: 90)
+
+    Returns:
+        TradingRule object
+
+    Common configurations:
+        - Standard: smooth_days=90 (approximately 3-4 months)
+
+    Note: Requires futures with roll schedules (not applicable to spot FX or metals)
+    """
+    return TradingRule(dict(
+        function=relative_carry,
+        data=["rawdata.smoothed_carry",
+              "rawdata.median_carry_for_asset_class"],
+        other_args={}
     ))
 
 

@@ -20,6 +20,9 @@ from backtest_framework import (
     create_accel_rule,
     create_normmom_rule,
     create_mrinasset_rule,
+    create_relmomentum_rule,
+    create_assettrend_rule,
+    create_relcarry_rule,
 )
 
 
@@ -43,6 +46,9 @@ class YAMLConfigLoader:
         'accel': create_accel_rule,
         'normmom': create_normmom_rule,
         'mrinasset': create_mrinasset_rule,
+        'relmomentum': create_relmomentum_rule,
+        'assettrend': create_assettrend_rule,
+        'relcarry': create_relcarry_rule,
     }
 
     def __init__(self, config_path: str):
@@ -129,6 +135,22 @@ class YAMLConfigLoader:
             if horizon is None:
                 raise ValueError(f"MRinasset rule '{rule_name}' requires horizon")
             return creator_func(horizon)
+
+        elif rule_type == 'relmomentum':
+            horizon = rule_config.get('horizon')
+            if horizon is None:
+                raise ValueError(f"Relmomentum rule '{rule_name}' requires horizon")
+            return creator_func(horizon)
+
+        elif rule_type == 'assettrend':
+            Lfast = rule_config.get('Lfast')
+            if Lfast is None:
+                raise ValueError(f"Assettrend rule '{rule_name}' requires Lfast")
+            return creator_func(Lfast)
+
+        elif rule_type == 'relcarry':
+            smooth_days = rule_config.get('smooth_days', 90)
+            return creator_func(smooth_days)
 
         else:
             # This shouldn't happen given the earlier check, but just in case
