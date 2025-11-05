@@ -140,6 +140,52 @@ trading_rules:
     type: mr_wings
     Lfast: 4
 
+  # ---------------------------------------------------------------------------
+  # NORMALIZED MOMENTUM - 6 variations (vol-adjusted EWMAC)
+  # Very fast to slow: 2, 4, 8, 16, 32, 64 (Lslow = Lfast * 4)
+  # ---------------------------------------------------------------------------
+  normmom_2:
+    type: normmom
+    Lfast: 2
+    vol_days: 35
+
+  normmom_4:
+    type: normmom
+    Lfast: 4
+    vol_days: 35
+
+  normmom_8:
+    type: normmom
+    Lfast: 8
+    vol_days: 35
+
+  normmom_16:
+    type: normmom
+    Lfast: 16
+    vol_days: 35
+
+  normmom_32:
+    type: normmom
+    Lfast: 32
+    vol_days: 35
+
+  normmom_64:
+    type: normmom
+    Lfast: 64
+    vol_days: 35
+
+  # ---------------------------------------------------------------------------
+  # CROSS-SECTIONAL MEAN REVERSION - 2 variations
+  # Trades against recent cross-sectional momentum within asset class
+  # ---------------------------------------------------------------------------
+  mrinasset_160:
+    type: mrinasset
+    horizon: 160
+
+  mrinasset_250:
+    type: mrinasset
+    horizon: 250
+
 # ==============================================================================
 # FORECAST WEIGHTS (Instrument-Specific Rule Application)
 # ==============================================================================
@@ -152,7 +198,7 @@ trading_rules:
 forecast_weights:
   # ------------------- FUTURES (All rules including carry) -------------------
   SP500:
-    # All 18 rules apply - weights will be estimated via shrinkage
+    # All 27 rules apply - weights will be estimated via shrinkage
     ewmac_4_16: null
     ewmac_8_32: null
     ewmac_16_64: null
@@ -172,6 +218,14 @@ forecast_weights:
     accel_32: null
     accel_64: null
     mr_wings_4: null
+    normmom_2: null
+    normmom_4: null
+    normmom_8: null
+    normmom_16: null
+    normmom_32: null
+    normmom_64: null
+    mrinasset_160: null
+    mrinasset_250: null
 
   NASDAQ:
     ewmac_4_16: null
@@ -193,6 +247,14 @@ forecast_weights:
     accel_32: null
     accel_64: null
     mr_wings_4: null
+    normmom_2: null
+    normmom_4: null
+    normmom_8: null
+    normmom_16: null
+    normmom_32: null
+    normmom_64: null
+    mrinasset_160: null
+    mrinasset_250: null
 
   US10:
     ewmac_4_16: null
@@ -214,6 +276,14 @@ forecast_weights:
     accel_32: null
     accel_64: null
     mr_wings_4: null
+    normmom_2: null
+    normmom_4: null
+    normmom_8: null
+    normmom_16: null
+    normmom_32: null
+    normmom_64: null
+    mrinasset_160: null
+    mrinasset_250: null
 
   CORN:
     ewmac_4_16: null
@@ -235,6 +305,14 @@ forecast_weights:
     accel_32: null
     accel_64: null
     mr_wings_4: null
+    normmom_2: null
+    normmom_4: null
+    normmom_8: null
+    normmom_16: null
+    normmom_32: null
+    normmom_64: null
+    mrinasset_160: null
+    mrinasset_250: null
 
   BUND:
     ewmac_4_16: null
@@ -256,6 +334,14 @@ forecast_weights:
     accel_32: null
     accel_64: null
     mr_wings_4: null
+    normmom_2: null
+    normmom_4: null
+    normmom_8: null
+    normmom_16: null
+    normmom_32: null
+    normmom_64: null
+    mrinasset_160: null
+    mrinasset_250: null
 
   BRENT-LAST:
     ewmac_4_16: null
@@ -277,6 +363,14 @@ forecast_weights:
     accel_32: null
     accel_64: null
     mr_wings_4: null
+    normmom_2: null
+    normmom_4: null
+    normmom_8: null
+    normmom_16: null
+    normmom_32: null
+    normmom_64: null
+    mrinasset_160: null
+    mrinasset_250: null
 
   EUROSTX:
     ewmac_4_16: null
@@ -298,6 +392,14 @@ forecast_weights:
     accel_32: null
     accel_64: null
     mr_wings_4: null
+    normmom_2: null
+    normmom_4: null
+    normmom_8: null
+    normmom_16: null
+    normmom_32: null
+    normmom_64: null
+    mrinasset_160: null
+    mrinasset_250: null
 
   NIKKEI:
     ewmac_4_16: null
@@ -319,6 +421,14 @@ forecast_weights:
     accel_32: null
     accel_64: null
     mr_wings_4: null
+    normmom_2: null
+    normmom_4: null
+    normmom_8: null
+    normmom_16: null
+    normmom_32: null
+    normmom_64: null
+    mrinasset_160: null
+    mrinasset_250: null
 
   # ------------------- FX & METALS (No carry rules) -------------------
   # Carry rules omitted for these instruments as they may lack futures roll data
@@ -339,6 +449,14 @@ forecast_weights:
     accel_32: null
     accel_64: null
     mr_wings_4: null
+    normmom_2: null
+    normmom_4: null
+    normmom_8: null
+    normmom_16: null
+    normmom_32: null
+    normmom_64: null
+    mrinasset_160: null
+    mrinasset_250: null
 
   JPY:
     ewmac_4_16: null
@@ -357,6 +475,14 @@ forecast_weights:
     accel_32: null
     accel_64: null
     mr_wings_4: null
+    normmom_2: null
+    normmom_4: null
+    normmom_8: null
+    normmom_16: null
+    normmom_32: null
+    normmom_64: null
+    mrinasset_160: null
+    mrinasset_250: null
 
   EUR_micro:
     ewmac_4_16: null
@@ -375,6 +501,14 @@ forecast_weights:
     accel_32: null
     accel_64: null
     mr_wings_4: null
+    normmom_2: null
+    normmom_4: null
+    normmom_8: null
+    normmom_16: null
+    normmom_32: null
+    normmom_64: null
+    mrinasset_160: null
+    mrinasset_250: null
 
   GOLD_micro:
     ewmac_4_16: null
@@ -393,6 +527,14 @@ forecast_weights:
     accel_32: null
     accel_64: null
     mr_wings_4: null
+    normmom_2: null
+    normmom_4: null
+    normmom_8: null
+    normmom_16: null
+    normmom_32: null
+    normmom_64: null
+    mrinasset_160: null
+    mrinasset_250: null
 
   SILVER:
     ewmac_4_16: null
@@ -411,6 +553,14 @@ forecast_weights:
     accel_32: null
     accel_64: null
     mr_wings_4: null
+    normmom_2: null
+    normmom_4: null
+    normmom_8: null
+    normmom_16: null
+    normmom_32: null
+    normmom_64: null
+    mrinasset_160: null
+    mrinasset_250: null
 
 # ==============================================================================
 # FUTURE ENHANCEMENTS - Rules Not Yet Supported
@@ -420,10 +570,6 @@ forecast_weights:
 # RELATIVE MOMENTUM (cross-sectional):
 #   - relmomentum_10, relmomentum_20, relmomentum_40, relmomentum_80
 #   - Requires: asset class groupings, cross-sectional ranking
-#
-# NORMALIZED MOMENTUM (vol-adjusted):
-#   - normmom_2, normmom_4, normmom_8, normmom_16, normmom_32, normmom_64
-#   - Requires: ewmac_calc_vol function
 #
 # ASSET TREND (EWMAC on asset class prices):
 #   - assettrend_2, assettrend_4, assettrend_8, assettrend_16, assettrend_32, assettrend_64
@@ -437,9 +583,17 @@ forecast_weights:
 #   - skewabs_180, skewabs_365, skewrv_180, skewrv_365
 #   - Requires: factor_trading_rule function, skew calculation
 #
-# CROSS-SECTIONAL MEAN REVERSION:
-#   - mrinasset_160
-#   - Requires: asset class groupings
+# ==============================================================================
+# RECENTLY ADDED RULES (NOW SUPPORTED)
+# ==============================================================================
+# ✓ NORMALIZED MOMENTUM (vol-adjusted EWMAC):
+#   - normmom_2, normmom_4, normmom_8, normmom_16, normmom_32, normmom_64
+#   - Uses: ewmac_calc_vol function
+#
+# ✓ CROSS-SECTIONAL MEAN REVERSION:
+#   - mrinasset_160, mrinasset_250
+#   - Uses: cross_sectional_mean_reversion function
+#   - Trades against recent cross-sectional momentum within asset class
 # ==============================================================================
 
 # ============================================================================
