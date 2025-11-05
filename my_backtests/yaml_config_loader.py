@@ -18,6 +18,8 @@ from backtest_framework import (
     create_breakout_rule,
     create_carry_rule,
     create_accel_rule,
+    create_normmom_rule,
+    create_mrinasset_rule,
 )
 
 
@@ -39,6 +41,8 @@ class YAMLConfigLoader:
         'breakout': create_breakout_rule,
         'carry': create_carry_rule,
         'accel': create_accel_rule,
+        'normmom': create_normmom_rule,
+        'mrinasset': create_mrinasset_rule,
     }
 
     def __init__(self, config_path: str):
@@ -112,6 +116,19 @@ class YAMLConfigLoader:
         elif rule_type == 'accel':
             Lfast = rule_config.get('Lfast', 4)
             return creator_func(Lfast)
+
+        elif rule_type == 'normmom':
+            Lfast = rule_config.get('Lfast')
+            if Lfast is None:
+                raise ValueError(f"Normmom rule '{rule_name}' requires Lfast")
+            vol_days = rule_config.get('vol_days', 35)
+            return creator_func(Lfast, vol_days)
+
+        elif rule_type == 'mrinasset':
+            horizon = rule_config.get('horizon')
+            if horizon is None:
+                raise ValueError(f"MRinasset rule '{rule_name}' requires horizon")
+            return creator_func(horizon)
 
         else:
             # This shouldn't happen given the earlier check, but just in case

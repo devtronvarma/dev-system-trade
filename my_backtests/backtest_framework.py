@@ -61,7 +61,7 @@ except ImportError:
     QUANTSTATS_AVAILABLE = False
 
 # Import all provided rules
-from systems.provided.rules.ewmac import ewmac_forecast_with_defaults as ewmac
+from systems.provided.rules.ewmac import ewmac_forecast_with_defaults as ewmac, ewmac_calc_vol
 from systems.provided.rules.mr_wings import mr_wings
 from systems.provided.rules.carry import carry
 from systems.provided.rules.breakout import breakout
@@ -769,6 +769,63 @@ def create_accel_rule(Lfast=4):
         function=accel,
         data=["data.daily_prices", "rawdata.daily_returns_volatility"],
         other_args=dict(Lfast=Lfast)
+    ))
+
+
+def create_normmom_rule(Lfast, vol_days=35):
+    """
+    Create a Normalized Momentum rule (vol-adjusted EWMAC).
+
+    This is similar to EWMAC but uses ewmac_calc_vol which calculates
+    volatility internally for better normalization across different markets.
+
+    Args:
+        Lfast: Fast moving average period (e.g., 2, 4, 8, 16, 32, 64)
+        vol_days: Volatility calculation lookback period (default: 35)
+
+    Returns:
+        TradingRule object
+
+    Common configurations:
+        - Very Fast: Lfast=2
+        - Fast: Lfast=4 or 8
+        - Medium: Lfast=16 or 32
+        - Slow: Lfast=64
+
+    Note: Lslow is automatically set to Lfast * 4
+    """
+    Lslow = Lfast * 4
+    return TradingRule(dict(
+        function=ewmac_calc_vol,
+        data=["data.daily_prices"],
+        other_args=dict(Lfast=Lfast, Lslow=Lslow, vol_days=vol_days)
+    ))
+
+
+def create_mrinasset_rule(horizon):
+    """
+    Create a Cross-Sectional Mean Reversion rule.
+
+    This rule trades against recent cross-sectional momentum within an asset class.
+    If an instrument has outperformed its asset class recently, it sells (and vice versa).
+
+    Args:
+        horizon: Lookback period for measuring relative performance (e.g., 160, 250)
+
+    Returns:
+        TradingRule object
+
+    Common configurations:
+        - Short-term: horizon=160 (approximately 6-7 months)
+        - Medium-term: horizon=250 (approximately 1 year)
+
+    Note: ewma_span defaults to horizon/4 if not specified
+    """
+    return TradingRule(dict(
+        function=cross_sectional_mean_reversion,
+        data=["rawdata.get_cumulative_daily_vol_normalised_returns",
+              "rawdata.normalised_price_for_asset_class"],
+        other_args=dict(horizon=horizon, ewma_span=None)
     ))
 
 
