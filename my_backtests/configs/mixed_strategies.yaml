@@ -11,32 +11,436 @@ instruments:
   - SP500
   - NASDAQ
   - US10
+  - CORN 
+  - BUND
+  - BRENT-LAST
+  - EUROSTX
+  - GBP
+  - GOLD_micro
+  - SILVER
+  - NIKKEI
+  - JPY
+  - EUR_micro
 
 # ============================================================================
 # TRADING RULES
+# Rob Carver-inspired strategy using currently supported rule types
 # ============================================================================
 trading_rules:
+  # ---------------------------------------------------------------------------
+  # MOMENTUM / TREND (EWMAC) - 5 variations across different timescales
+  # Fast-to-slow: 4-16, 8-32, 16-64, 32-128, 64-256
+  # ---------------------------------------------------------------------------
+  ewmac_4_16:
+    type: ewmac
+    Lfast: 4
+    Lslow: 16
+    forecast_scalar: null  # Auto-estimate
+
+  ewmac_8_32:
+    type: ewmac
+    Lfast: 8
+    Lslow: 32
+    forecast_scalar: null
+
+  ewmac_16_64:
+    type: ewmac
+    Lfast: 16
+    Lslow: 64
+    forecast_scalar: null
+
+  ewmac_32_128:
+    type: ewmac
+    Lfast: 32
+    Lslow: 128
+    forecast_scalar: null
+
   ewmac_64_256:
     type: ewmac
     Lfast: 64
     Lslow: 256
     forecast_scalar: null
 
+  # ---------------------------------------------------------------------------
+  # BREAKOUT - 6 variations (Donchian channel style)
+  # Rob uses: 10, 20, 40, 80, 160, 320 day lookbacks
+  # ---------------------------------------------------------------------------
+  breakout_10:
+    type: breakout
+    lookback: 10
+    smooth: null  # Default: lookback/4
+
+  breakout_20:
+    type: breakout
+    lookback: 20
+    smooth: null
+
+  breakout_40:
+    type: breakout
+    lookback: 40
+    smooth: null
+
   breakout_80:
     type: breakout
     lookback: 80
-    smooth: null  # null means use default (lookback/4)
-    forecast_scalar: null
+    smooth: null
 
+  breakout_160:
+    type: breakout
+    lookback: 160
+    smooth: null
+
+  breakout_320:
+    type: breakout
+    lookback: 320
+    smooth: null
+
+  # ---------------------------------------------------------------------------
+  # CARRY - 4 variations (futures only)
+  # Rob uses: 10, 30, 60, 125 day smoothing
+  # Note: These will only apply to futures instruments (via forecast_weights below)
+  # ---------------------------------------------------------------------------
+  carry_10:
+    type: carry
+    smooth_days: 10
+
+  carry_30:
+    type: carry
+    smooth_days: 30
+
+  carry_60:
+    type: carry
+    smooth_days: 60
+
+  carry_125:
+    type: carry
+    smooth_days: 125
+
+  # ---------------------------------------------------------------------------
+  # ACCELERATION - 3 variations
+  # Rob uses: 16, 32, 64 (measures change in momentum)
+  # ---------------------------------------------------------------------------
+  accel_16:
+    type: accel
+    Lfast: 16
+
+  accel_32:
+    type: accel
+    Lfast: 32
+
+  accel_64:
+    type: accel
+    Lfast: 64
+
+  # ---------------------------------------------------------------------------
+  # MEAN REVERSION - 1 variation
+  # Trades at price extremes (wings)
+  # ---------------------------------------------------------------------------
   mr_wings_4:
     type: mr_wings
     Lfast: 4
-    forecast_scalar: null
 
-  accel_4:
-    type: accel
-    Lfast: 4
-    forecast_scalar: null
+# ==============================================================================
+# FORECAST WEIGHTS (Instrument-Specific Rule Application)
+# ==============================================================================
+# This nested structure allows different rules to apply to different instruments.
+# Carry rules only work with futures that have roll data, so we exclude FX and metals.
+# The system will estimate optimal weights via shrinkage for the rules that apply.
+#
+# Strategy: Let shrinkage determine rule weights, but restrict which rules apply
+# ==============================================================================
+forecast_weights:
+  # ------------------- FUTURES (All rules including carry) -------------------
+  SP500:
+    # All 18 rules apply - weights will be estimated via shrinkage
+    ewmac_4_16: null
+    ewmac_8_32: null
+    ewmac_16_64: null
+    ewmac_32_128: null
+    ewmac_64_256: null
+    breakout_10: null
+    breakout_20: null
+    breakout_40: null
+    breakout_80: null
+    breakout_160: null
+    breakout_320: null
+    carry_10: null
+    carry_30: null
+    carry_60: null
+    carry_125: null
+    accel_16: null
+    accel_32: null
+    accel_64: null
+    mr_wings_4: null
+
+  NASDAQ:
+    ewmac_4_16: null
+    ewmac_8_32: null
+    ewmac_16_64: null
+    ewmac_32_128: null
+    ewmac_64_256: null
+    breakout_10: null
+    breakout_20: null
+    breakout_40: null
+    breakout_80: null
+    breakout_160: null
+    breakout_320: null
+    carry_10: null
+    carry_30: null
+    carry_60: null
+    carry_125: null
+    accel_16: null
+    accel_32: null
+    accel_64: null
+    mr_wings_4: null
+
+  US10:
+    ewmac_4_16: null
+    ewmac_8_32: null
+    ewmac_16_64: null
+    ewmac_32_128: null
+    ewmac_64_256: null
+    breakout_10: null
+    breakout_20: null
+    breakout_40: null
+    breakout_80: null
+    breakout_160: null
+    breakout_320: null
+    carry_10: null
+    carry_30: null
+    carry_60: null
+    carry_125: null
+    accel_16: null
+    accel_32: null
+    accel_64: null
+    mr_wings_4: null
+
+  CORN:
+    ewmac_4_16: null
+    ewmac_8_32: null
+    ewmac_16_64: null
+    ewmac_32_128: null
+    ewmac_64_256: null
+    breakout_10: null
+    breakout_20: null
+    breakout_40: null
+    breakout_80: null
+    breakout_160: null
+    breakout_320: null
+    carry_10: null
+    carry_30: null
+    carry_60: null
+    carry_125: null
+    accel_16: null
+    accel_32: null
+    accel_64: null
+    mr_wings_4: null
+
+  BUND:
+    ewmac_4_16: null
+    ewmac_8_32: null
+    ewmac_16_64: null
+    ewmac_32_128: null
+    ewmac_64_256: null
+    breakout_10: null
+    breakout_20: null
+    breakout_40: null
+    breakout_80: null
+    breakout_160: null
+    breakout_320: null
+    carry_10: null
+    carry_30: null
+    carry_60: null
+    carry_125: null
+    accel_16: null
+    accel_32: null
+    accel_64: null
+    mr_wings_4: null
+
+  BRENT-LAST:
+    ewmac_4_16: null
+    ewmac_8_32: null
+    ewmac_16_64: null
+    ewmac_32_128: null
+    ewmac_64_256: null
+    breakout_10: null
+    breakout_20: null
+    breakout_40: null
+    breakout_80: null
+    breakout_160: null
+    breakout_320: null
+    carry_10: null
+    carry_30: null
+    carry_60: null
+    carry_125: null
+    accel_16: null
+    accel_32: null
+    accel_64: null
+    mr_wings_4: null
+
+  EUROSTX:
+    ewmac_4_16: null
+    ewmac_8_32: null
+    ewmac_16_64: null
+    ewmac_32_128: null
+    ewmac_64_256: null
+    breakout_10: null
+    breakout_20: null
+    breakout_40: null
+    breakout_80: null
+    breakout_160: null
+    breakout_320: null
+    carry_10: null
+    carry_30: null
+    carry_60: null
+    carry_125: null
+    accel_16: null
+    accel_32: null
+    accel_64: null
+    mr_wings_4: null
+
+  NIKKEI:
+    ewmac_4_16: null
+    ewmac_8_32: null
+    ewmac_16_64: null
+    ewmac_32_128: null
+    ewmac_64_256: null
+    breakout_10: null
+    breakout_20: null
+    breakout_40: null
+    breakout_80: null
+    breakout_160: null
+    breakout_320: null
+    carry_10: null
+    carry_30: null
+    carry_60: null
+    carry_125: null
+    accel_16: null
+    accel_32: null
+    accel_64: null
+    mr_wings_4: null
+
+  # ------------------- FX & METALS (No carry rules) -------------------
+  # Carry rules omitted for these instruments as they may lack futures roll data
+  GBP:
+    ewmac_4_16: null
+    ewmac_8_32: null
+    ewmac_16_64: null
+    ewmac_32_128: null
+    ewmac_64_256: null
+    breakout_10: null
+    breakout_20: null
+    breakout_40: null
+    breakout_80: null
+    breakout_160: null
+    breakout_320: null
+    # carry rules omitted
+    accel_16: null
+    accel_32: null
+    accel_64: null
+    mr_wings_4: null
+
+  JPY:
+    ewmac_4_16: null
+    ewmac_8_32: null
+    ewmac_16_64: null
+    ewmac_32_128: null
+    ewmac_64_256: null
+    breakout_10: null
+    breakout_20: null
+    breakout_40: null
+    breakout_80: null
+    breakout_160: null
+    breakout_320: null
+    # carry rules omitted
+    accel_16: null
+    accel_32: null
+    accel_64: null
+    mr_wings_4: null
+
+  EUR_micro:
+    ewmac_4_16: null
+    ewmac_8_32: null
+    ewmac_16_64: null
+    ewmac_32_128: null
+    ewmac_64_256: null
+    breakout_10: null
+    breakout_20: null
+    breakout_40: null
+    breakout_80: null
+    breakout_160: null
+    breakout_320: null
+    # carry rules omitted
+    accel_16: null
+    accel_32: null
+    accel_64: null
+    mr_wings_4: null
+
+  GOLD_micro:
+    ewmac_4_16: null
+    ewmac_8_32: null
+    ewmac_16_64: null
+    ewmac_32_128: null
+    ewmac_64_256: null
+    breakout_10: null
+    breakout_20: null
+    breakout_40: null
+    breakout_80: null
+    breakout_160: null
+    breakout_320: null
+    # carry rules omitted
+    accel_16: null
+    accel_32: null
+    accel_64: null
+    mr_wings_4: null
+
+  SILVER:
+    ewmac_4_16: null
+    ewmac_8_32: null
+    ewmac_16_64: null
+    ewmac_32_128: null
+    ewmac_64_256: null
+    breakout_10: null
+    breakout_20: null
+    breakout_40: null
+    breakout_80: null
+    breakout_160: null
+    breakout_320: null
+    # carry rules omitted
+    accel_16: null
+    accel_32: null
+    accel_64: null
+    mr_wings_4: null
+
+# ==============================================================================
+# FUTURE ENHANCEMENTS - Rules Not Yet Supported
+# ==============================================================================
+# TODO: Add support for these rule types in yaml_config_loader.py
+#
+# RELATIVE MOMENTUM (cross-sectional):
+#   - relmomentum_10, relmomentum_20, relmomentum_40, relmomentum_80
+#   - Requires: asset class groupings, cross-sectional ranking
+#
+# NORMALIZED MOMENTUM (vol-adjusted):
+#   - normmom_2, normmom_4, normmom_8, normmom_16, normmom_32, normmom_64
+#   - Requires: ewmac_calc_vol function
+#
+# ASSET TREND (EWMAC on asset class prices):
+#   - assettrend_2, assettrend_4, assettrend_8, assettrend_16, assettrend_32, assettrend_64
+#   - Requires: asset class price aggregation
+#
+# RELATIVE CARRY (cross-sectional):
+#   - relcarry
+#   - Requires: asset class groupings, median carry calculation
+#
+# SKEW RULES (absolute and relative volatility skew):
+#   - skewabs_180, skewabs_365, skewrv_180, skewrv_365
+#   - Requires: factor_trading_rule function, skew calculation
+#
+# CROSS-SECTIONAL MEAN REVERSION:
+#   - mrinasset_160
+#   - Requires: asset class groupings
+# ==============================================================================
 
 # ============================================================================
 # BACKTEST PARAMETERS
@@ -47,12 +451,28 @@ backtest:
 
   notional_trading_capital: 1000000
   base_currency: "USD"
-  percentage_vol_target: 18
+  percentage_vol_target: 15  # Rob uses 20%, but we keep 15% for now (more conservative)
 
-  forecast_weight_method: "shrinkage"
-  forecast_scalar_pooling: false
-  instrument_weight_method: "shrinkage"
-  use_estimations: true
+  # -------------------- Forecast-Level Configuration --------------------
+  forecast_cap: 20.0  # Rob Carver uses 20 (default in pysystemtrade)
+  forecast_weight_method: "shrinkage"  # Estimate optimal rule weights from data
+  forecast_scalar_pooling: false  # Don't pool forecast scalars across instruments
+
+  # FDM (Forecast Diversification Multiplier)
+  # null = estimate from data (recommended)
+  # Set to fixed value (e.g., 1.5) if you want to override estimation
+  forecast_div_multiplier: null
+
+  # -------------------- Instrument-Level Configuration --------------------
+  instrument_weight_method: "shrinkage"  # Estimate optimal instrument weights from data
+
+  # IDM (Instrument Diversification Multiplier)
+  # null = estimate from data (recommended)
+  # Rob uses 2.5 for his 109-instrument portfolio
+  # Set to fixed value if you want to override estimation
+  instrument_div_multiplier: null
+
+  use_estimations: true  # Use shrinkage to estimate weights (vs equal weights)
 
 # ============================================================================
 # OUTPUT SETTINGS

@@ -90,7 +90,12 @@ class BacktestConfig:
         forecast_scalar_pooling=False,
         forecast_weight_method="shrinkage",
         instrument_weight_method="shrinkage",
-        use_estimations=True
+        use_estimations=True,
+        forecast_weights=None,
+        instrument_weights=None,
+        forecast_cap=20.0,
+        forecast_div_multiplier=None,
+        instrument_div_multiplier=None
     ):
         """
         Initialize backtest configuration.
@@ -107,6 +112,11 @@ class BacktestConfig:
             forecast_weight_method: Method for forecast weight estimation
             instrument_weight_method: Method for instrument weight estimation
             use_estimations: If False, uses equal weights everywhere
+            forecast_weights: Dict of forecast weights (nested: {instrument: {rule: weight}} or flat: {rule: weight})
+            instrument_weights: Dict of instrument weights {instrument: weight}
+            forecast_cap: Maximum forecast value (default 20.0, per Rob Carver)
+            forecast_div_multiplier: Fixed FDM value (None = estimate from data)
+            instrument_div_multiplier: Fixed IDM value (None = estimate from data)
         """
         self.instruments = instruments
         self.trading_rules = trading_rules
@@ -119,6 +129,11 @@ class BacktestConfig:
         self.forecast_weight_method = forecast_weight_method
         self.instrument_weight_method = instrument_weight_method
         self.use_estimations = use_estimations
+        self.forecast_weights = forecast_weights
+        self.instrument_weights = instrument_weights
+        self.forecast_cap = forecast_cap
+        self.forecast_div_multiplier = forecast_div_multiplier
+        self.instrument_div_multiplier = instrument_div_multiplier
 
 
 class BacktestRunner:
@@ -154,6 +169,15 @@ class BacktestRunner:
         # Add trading rules
         my_config.trading_rules = self.config.trading_rules
 
+        # Add forecast_weights and instrument_weights if provided
+        if self.config.forecast_weights is not None:
+            my_config.forecast_weights = self.config.forecast_weights
+        if self.config.instrument_weights is not None:
+            my_config.instrument_weights = self.config.instrument_weights
+
+        # Forecast cap (Rob Carver uses 20)
+        my_config.forecast_cap = self.config.forecast_cap
+
         # Position sizing parameters
         my_config.percentage_vol_target = self.config.percentage_vol_target
         my_config.notional_trading_capital = self.config.notional_trading_capital
@@ -187,14 +211,30 @@ class BacktestRunner:
             # Start with defaults from config, then override method
             my_config.forecast_weight_estimate["method"] = self.config.forecast_weight_method
             # Keep the default date_method from defaults.yaml (expanding)
-            my_config.use_forecast_div_mult_estimates = True
+
+            # FDM (Forecast Diversification Multiplier)
+            if self.config.forecast_div_multiplier is not None:
+                # User provided a fixed FDM value
+                my_config.use_forecast_div_mult_estimates = False
+                my_config.forecast_div_multiplier = self.config.forecast_div_multiplier
+            else:
+                # Estimate FDM from data
+                my_config.use_forecast_div_mult_estimates = True
 
             # Portfolio/Instrument level - use full optimizer configuration
             my_config.use_instrument_weight_estimates = True
             # Start with defaults from config, then override method
             my_config.instrument_weight_estimate["method"] = self.config.instrument_weight_method
             # Keep the default date_method from defaults.yaml (expanding)
-            my_config.use_instrument_div_mult_estimates = True
+
+            # IDM (Instrument Diversification Multiplier)
+            if self.config.instrument_div_multiplier is not None:
+                # User provided a fixed IDM value
+                my_config.use_instrument_div_mult_estimates = False
+                my_config.instrument_div_multiplier = self.config.instrument_div_multiplier
+            else:
+                # Estimate IDM from data
+                my_config.use_instrument_div_mult_estimates = True
         else:
             # Use equal weights everywhere
             my_config.use_forecast_scale_estimates = True

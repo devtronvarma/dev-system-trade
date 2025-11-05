@@ -154,6 +154,9 @@ class YAMLConfigLoader:
             'forecast_weight_method': backtest_config.get('forecast_weight_method', 'shrinkage'),
             'instrument_weight_method': backtest_config.get('instrument_weight_method', 'shrinkage'),
             'use_estimations': backtest_config.get('use_estimations', True),
+            'forecast_cap': backtest_config.get('forecast_cap', 20.0),
+            'forecast_div_multiplier': backtest_config.get('forecast_div_multiplier'),
+            'instrument_div_multiplier': backtest_config.get('instrument_div_multiplier'),
         }
 
         return params
@@ -176,10 +179,17 @@ class YAMLConfigLoader:
         # Parse backtest parameters
         params = self._parse_backtest_params()
 
+        # Get forecast_weights and instrument_weights if provided
+        # These are optional and will be None if not specified
+        forecast_weights = self.raw_config.get('forecast_weights')
+        instrument_weights = self.raw_config.get('instrument_weights')
+
         # Create BacktestConfig
         config = BacktestConfig(
             instruments=instruments,
             trading_rules=trading_rules,
+            forecast_weights=forecast_weights,
+            instrument_weights=instrument_weights,
             **params
         )
 
