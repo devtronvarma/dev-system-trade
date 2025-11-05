@@ -1,0 +1,61 @@
+# Backtest Configuration: Trend + Mean Reversion Portfolio
+# This config demonstrates a multi-strategy approach combining trend-following and mean reversion
+
+name: "Trend + Mean Reversion Portfolio"
+description: "Combines EWMAC trend following with mean reversion wings on US equities and bonds"
+
+# ============================================================================
+# INSTRUMENTS
+# ============================================================================
+instruments:
+  - SP500
+  - NASDAQ
+  - US10
+
+# ============================================================================
+# TRADING RULES
+# ============================================================================
+# Each rule needs: type, parameters, and optional forecast_scalar
+trading_rules:
+  ewmac_64_256:
+    type: ewmac
+    Lfast: 64
+    Lslow: 256
+    forecast_scalar: null  # null means auto-estimate
+
+  mr_wings_4:
+    type: mr_wings
+    Lfast: 4
+    forecast_scalar: null
+
+# ============================================================================
+# BACKTEST PARAMETERS
+# ============================================================================
+backtest:
+  start_date: "2000-01-01"
+  end_date: null  # null means use all available data
+
+  # Capital and risk parameters
+  notional_trading_capital: 1000000
+  base_currency: "USD"
+  percentage_vol_target: 15
+
+  # Forecast combination
+  forecast_weight_method: "shrinkage"  # options: shrinkage, equal_weights, handcraft
+  forecast_scalar_pooling: false
+
+  # Portfolio/instrument weights
+  instrument_weight_method: "shrinkage"  # options: shrinkage, equal_weights, handcraft
+
+  # Use optimization for weights? Set to false for equal weights everywhere
+  use_estimations: true
+
+# ============================================================================
+# OUTPUT SETTINGS
+# ============================================================================
+output:
+  save_results: true
+  output_dir: "outputs"
+  plot_filename: "trend_mr_portfolio.png"
+  export_stats: true
+  stats_filename: "trend_mr_portfolio_stats.csv"

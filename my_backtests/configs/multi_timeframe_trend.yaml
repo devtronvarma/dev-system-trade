@@ -1,0 +1,66 @@
+# Backtest Configuration: Multi-Timeframe Trend Following
+# Tests multiple EWMAC variations across different timeframes
+
+name: "Multi-Timeframe Trend Following"
+description: "Multiple EWMAC rules from fast to very slow on equities and bonds"
+
+# ============================================================================
+# INSTRUMENTS
+# ============================================================================
+instruments:
+  - SP500
+  - US10
+
+# ============================================================================
+# TRADING RULES
+# ============================================================================
+trading_rules:
+  ewmac_8_32:
+    type: ewmac
+    Lfast: 8
+    Lslow: 32
+    forecast_scalar: null
+
+  ewmac_16_64:
+    type: ewmac
+    Lfast: 16
+    Lslow: 64
+    forecast_scalar: null
+
+  ewmac_32_128:
+    type: ewmac
+    Lfast: 32
+    Lslow: 128
+    forecast_scalar: null
+
+  ewmac_64_256:
+    type: ewmac
+    Lfast: 64
+    Lslow: 256
+    forecast_scalar: null
+
+# ============================================================================
+# BACKTEST PARAMETERS
+# ============================================================================
+backtest:
+  start_date: "2000-01-01"
+  end_date: null
+
+  notional_trading_capital: 500000
+  base_currency: "USD"
+  percentage_vol_target: 20
+
+  forecast_weight_method: "shrinkage"
+  forecast_scalar_pooling: false
+  instrument_weight_method: "shrinkage"
+  use_estimations: true
+
+# ============================================================================
+# OUTPUT SETTINGS
+# ============================================================================
+output:
+  save_results: true
+  output_dir: "outputs"
+  plot_filename: "multi_timeframe_trend.png"
+  export_stats: true
+  stats_filename: "multi_timeframe_trend_stats.csv"

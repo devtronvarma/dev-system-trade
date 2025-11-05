@@ -1,0 +1,57 @@
+# Backtest Configuration: Equal Weights Test
+# Same as trend_mr_portfolio but with equal weights (no optimization)
+# Useful for comparing optimized vs. non-optimized approaches
+
+name: "Equal Weights (No Optimization)"
+description: "Trend + MR with equal weights to establish baseline performance"
+
+# ============================================================================
+# INSTRUMENTS
+# ============================================================================
+instruments:
+  - SP500
+  - NASDAQ
+  - US10
+
+# ============================================================================
+# TRADING RULES
+# ============================================================================
+trading_rules:
+  ewmac_64_256:
+    type: ewmac
+    Lfast: 64
+    Lslow: 256
+    forecast_scalar: null
+
+  mr_wings_4:
+    type: mr_wings
+    Lfast: 4
+    forecast_scalar: null
+
+# ============================================================================
+# BACKTEST PARAMETERS
+# ============================================================================
+backtest:
+  start_date: "2000-01-01"
+  end_date: null
+
+  notional_trading_capital: 1000000
+  base_currency: "USD"
+  percentage_vol_target: 15
+
+  forecast_weight_method: "equal_weights"
+  forecast_scalar_pooling: true
+  instrument_weight_method: "equal_weights"
+
+  # Key difference: no optimization
+  use_estimations: false
+
+# ============================================================================
+# OUTPUT SETTINGS
+# ============================================================================
+output:
+  save_results: true
+  output_dir: "outputs"
+  plot_filename: "equal_weights.png"
+  export_stats: true
+  stats_filename: "equal_weights_stats.csv"

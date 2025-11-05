@@ -24,6 +24,8 @@ Incorrect approach (will break):
 """
 
 import matplotlib.pyplot as plt
+import pandas as pd
+from pathlib import Path
 from sysdata.sim.csv_futures_sim_data import csvFuturesSimData
 from sysdata.config.configdata import Config
 from systems.basesystem import System
@@ -35,6 +37,28 @@ from systems.positionsizing import PositionSizing
 from systems.portfolio import Portfolios
 from systems.accounts.accounts_stage import Account
 from systems.trading_rules import TradingRule
+
+try:
+    import quantstats as qs
+    QUANTSTATS_AVAILABLE = True
+
+    # Monkey-patch QuantStats to fix pandas 2.x compatibility issues
+    # Replace 'ME' with 'M' in the stats module
+    import quantstats.stats as qs_stats
+    if hasattr(qs_stats, 'gain_to_pain_ratio'):
+        _original_gain_to_pain = qs_stats.gain_to_pain_ratio
+
+        def _patched_gain_to_pain(returns, rf=0, resolution='M'):
+            """Patched version that uses 'M' instead of 'ME' for pandas 2.x"""
+            # Convert ME to M for compatibility
+            if resolution == 'ME':
+                resolution = 'MS'  # Month Start is more compatible
+            return _original_gain_to_pain(returns, rf, resolution)
+
+        qs_stats.gain_to_pain_ratio = _patched_gain_to_pain
+
+except ImportError:
+    QUANTSTATS_AVAILABLE = False
 
 # Import all provided rules
 from systems.provided.rules.ewmac import ewmac_forecast_with_defaults as ewmac
@@ -234,13 +258,14 @@ class BacktestRunner:
             inst_returns = self.system.accounts.pandl_for_instrument(instrument)
             print(inst_returns.percent.stats())
 
-    def plot_results(self, portfolio_returns, save_path=None):
+    def plot_results(self, portfolio_returns, save_path=None, show_plot=True):
         """
         Plot backtest results.
 
         Args:
             portfolio_returns: Returns object from system.accounts.portfolio()
             save_path: Optional path to save figure (e.g., 'backtest_results.png')
+            show_plot: Whether to display the plot interactively (default: True)
         """
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10))
 
@@ -276,7 +301,308 @@ class BacktestRunner:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             print(f"\nPlot saved to: {save_path}")
 
-        plt.show()
+        if show_plot:
+            plt.show()
+        else:
+            plt.close(fig)
+
+    def export_stats_to_csv(self, portfolio_returns, csv_path):
+        """
+        Export backtest statistics to CSV file.
+
+        Args:
+            portfolio_returns: Returns object from system.accounts.portfolio()
+            csv_path: Path to save CSV file
+        """
+        # Create output directory if it doesn't exist
+        Path(csv_path).parent.mkdir(parents=True, exist_ok=True)
+
+        # Get stats for portfolio
+        stats_dict = portfolio_returns.net.percent.stats()
+
+        # Convert to DataFrame
+        stats_df = pd.DataFrame({
+            'Portfolio_Net': stats_dict
+        })
+
+        # Add per-instrument stats
+        for instrument in self.config.instruments:
+            inst_returns = self.system.accounts.pandl_for_instrument(instrument)
+            inst_stats = inst_returns.percent.stats()
+            stats_df[f'{instrument}_Net'] = inst_stats
+
+        # Transpose so metrics are rows
+        stats_df = stats_df.T
+
+        # Save to CSV
+        stats_df.to_csv(csv_path)
+        print(f"Stats exported to: {csv_path}")
+
+    def _get_returns_series(self, portfolio_returns):
+        """
+        Extract returns as a pandas Series for QuantStats.
+
+        Args:
+            portfolio_returns: Returns object from system.accounts.portfolio()
+
+        Returns:
+            pandas Series of net percentage returns
+        """
+        # The percent object is already a pandas Series-like object
+        # It contains percentage returns (not cumulative)
+        returns_pct = portfolio_returns.net.percent
+
+        # Convert to pandas Series if needed and convert from percentage to decimal
+        if hasattr(returns_pct, 'to_frame'):
+            returns = pd.Series(returns_pct.values, index=returns_pct.index)
+        else:
+            returns = pd.Series(returns_pct)
+
+        # Returns are in percentage form, convert to decimal
+        returns = returns / 100.0
+
+        return returns
+
+    def generate_quantstats_report(
+        self,
+        portfolio_returns,
+        output_path,
+        benchmark=None,
+        title=None
+    ):
+        """
+        Generate a comprehensive QuantStats HTML report.
+
+        Args:
+            portfolio_returns: Returns object from system.accounts.portfolio()
+            output_path: Path to save HTML report
+            benchmark: Optional benchmark returns (pandas Series)
+            title: Optional custom title for the report
+
+        Returns:
+            Path to generated report
+        """
+        if not QUANTSTATS_AVAILABLE:
+            print("⚠️  QuantStats not available. Install with: pip install quantstats")
+            return None
+
+        # Create output directory if needed
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+
+        # Get returns series
+        returns = self._get_returns_series(portfolio_returns)
+
+        # Set title
+        if title is None:
+            title = f"Backtest Report: {', '.join(self.config.instruments)}"
+
+        print(f"\nGenerating QuantStats HTML report...")
+
+        try:
+            # Try to generate the report using basic mode (fewer metrics, no problematic frequencies)
+            qs.reports.html(
+                returns,
+                benchmark=benchmark,
+                output=output_path,
+                title=title,
+                download_filename=Path(output_path).name,
+                periods_per_year=252  # Daily data
+            )
+            print(f"✓ QuantStats report saved to: {output_path}")
+            return output_path
+
+        except (ValueError, KeyError) as e:
+            if 'ME' in str(e) or 'frequency' in str(e).lower():
+                print(f"⚠️  QuantStats pandas compatibility issue detected.")
+                print(f"    Creating simplified HTML report instead...")
+
+                # Generate a simplified report using QuantStats plots
+                self._generate_simplified_html_report(
+                    returns,
+                    output_path,
+                    title,
+                    benchmark
+                )
+                return output_path
+            else:
+                raise
+
+    def _generate_simplified_html_report(
+        self,
+        returns,
+        output_path,
+        title,
+        benchmark=None
+    ):
+        """
+        Generate a simplified HTML report with key metrics and charts.
+        Used as a fallback when QuantStats has pandas compatibility issues.
+
+        Args:
+            returns: Decimal returns series (already divided by 100)
+            output_path: Path to save HTML
+            title: Report title
+            benchmark: Optional benchmark returns
+        """
+        import base64
+        from io import BytesIO
+
+        # Get the portfolio_returns object from the runner
+        # We need this to use pysystemtrade's built-in calculations
+        # Note: This is a bit hacky, but necessary to get accurate stats
+
+        # Convert returns back to percentage for pysystemtrade
+        returns_pct = returns * 100
+
+        # Use cumsum for cumulative returns (matches pysystemtrade .curve())
+        cum_returns_pct = returns_pct.cumsum()
+        total_return_pct = cum_returns_pct.iloc[-1]
+
+        # Calculate drawdown the pysystemtrade way
+        # Drawdown = (current cumulative - running max cumulative)
+        running_max_pct = cum_returns_pct.expanding().max()
+        drawdown_pct = cum_returns_pct - running_max_pct
+        max_dd_pct = drawdown_pct.min()
+
+        # Calculate annualized metrics using pysystemtrade's formulas
+        # Annual mean = mean of daily returns * 252
+        ann_return_pct = returns_pct.mean() * 252
+
+        # Annual std = std of daily returns * sqrt(252)
+        ann_vol_pct = returns_pct.std() * (252 ** 0.5)
+
+        # Sharpe = ann_return / ann_vol
+        sharpe = ann_return_pct / ann_vol_pct if ann_vol_pct > 0 else 0
+
+        # Create plots
+        fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+
+        # Plot 1: Cumulative returns (using cumsum to match pysystemtrade)
+        ax1 = axes[0, 0]
+        cum_returns_pct.plot(ax=ax1, label='Strategy')
+        if benchmark is not None:
+            bench_cum_pct = (benchmark * 100).cumsum()
+            bench_cum_pct.plot(ax=ax1, label='Benchmark', alpha=0.7)
+        ax1.set_title('Cumulative Returns')
+        ax1.set_ylabel('Return (%)')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+
+        # Plot 2: Drawdown
+        ax2 = axes[0, 1]
+        drawdown_pct.plot(ax=ax2, color='red')
+        ax2.set_title('Drawdown')
+        ax2.set_ylabel('Drawdown (%)')
+        ax2.grid(True, alpha=0.3)
+        ax2.fill_between(drawdown_pct.index, drawdown_pct.values, 0, alpha=0.3, color='red')
+
+        # Plot 3: Monthly returns heatmap (simplified)
+        ax3 = axes[1, 0]
+        monthly = returns.resample('MS').sum()
+        monthly.plot(kind='bar', ax=ax3, width=0.8)
+        ax3.set_title('Monthly Returns')
+        ax3.set_ylabel('Return')
+        ax3.grid(True, alpha=0.3, axis='y')
+
+        # Plot 4: Rolling Sharpe
+        ax4 = axes[1, 1]
+        rolling_sharpe = (returns.rolling(252).mean() / returns.rolling(252).std()) * (252 ** 0.5)
+        rolling_sharpe.plot(ax=ax4)
+        ax4.axhline(y=0, color='black', linestyle='--', alpha=0.3)
+        ax4.set_title('Rolling 252-Day Sharpe Ratio')
+        ax4.set_ylabel('Sharpe Ratio')
+        ax4.grid(True, alpha=0.3)
+
+        plt.tight_layout()
+
+        # Save plot to base64
+        buffer = BytesIO()
+        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+        buffer.seek(0)
+        img_base64 = base64.b64encode(buffer.read()).decode()
+        plt.close(fig)
+
+        # Generate HTML
+        html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{title}</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }}
+        .container {{ max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+        h1 {{ color: #333; border-bottom: 2px solid #4CAF50; padding-bottom: 10px; }}
+        .metrics {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0; }}
+        .metric {{ background: #f9f9f9; padding: 20px; border-radius: 5px; border-left: 4px solid #4CAF50; }}
+        .metric-value {{ font-size: 24px; font-weight: bold; color: #333; }}
+        .metric-label {{ color: #666; font-size: 14px; margin-top: 5px; }}
+        .charts {{ margin-top: 30px; }}
+        img {{ max-width: 100%; height: auto; }}
+        .footer {{ margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{title}</h1>
+
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value">{total_return_pct:.2f}%</div>
+                <div class="metric-label">Total Return</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">{ann_return_pct:.2f}%</div>
+                <div class="metric-label">Annual Return</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">{ann_vol_pct:.2f}%</div>
+                <div class="metric-label">Annual Volatility</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">{sharpe:.2f}</div>
+                <div class="metric-label">Sharpe Ratio</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">{max_dd_pct:.2f}%</div>
+                <div class="metric-label">Max Drawdown</div>
+            </div>
+        </div>
+
+        <div class="charts">
+            <img src="data:image/png;base64,{img_base64}" alt="Performance Charts">
+        </div>
+
+        <div class="footer">
+            Generated with pysystemtrade YAML Backtesting Framework<br>
+            Report created: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+        # Write HTML file
+        with open(output_path, 'w') as f:
+            f.write(html)
+
+        print(f"✓ Simplified HTML report saved to: {output_path}")
+
+    def generate_quantstats_tearsheet(self, portfolio_returns, benchmark=None):
+        """
+        Display an interactive QuantStats tearsheet (for Jupyter notebooks).
+
+        Args:
+            portfolio_returns: Returns object from system.accounts.portfolio()
+            benchmark: Optional benchmark returns (pandas Series)
+        """
+        if not QUANTSTATS_AVAILABLE:
+            print("⚠️  QuantStats not available. Install with: pip install quantstats")
+            return
+
+        returns = self._get_returns_series(portfolio_returns)
+
+        # Display interactive tearsheet
+        qs.reports.full(returns, benchmark=benchmark)
 
 
 # ============================================================================

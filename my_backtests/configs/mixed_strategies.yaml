@@ -1,0 +1,65 @@
+# Backtest Configuration: Mixed Strategy Types
+# Combines different rule types: trend, breakout, mean reversion, and acceleration
+
+name: "Mixed Strategy Types"
+description: "Diversified approach using trend following, breakout, mean reversion, and acceleration"
+
+# ============================================================================
+# INSTRUMENTS
+# ============================================================================
+instruments:
+  - SP500
+  - NASDAQ
+  - US10
+
+# ============================================================================
+# TRADING RULES
+# ============================================================================
+trading_rules:
+  ewmac_64_256:
+    type: ewmac
+    Lfast: 64
+    Lslow: 256
+    forecast_scalar: null
+
+  breakout_80:
+    type: breakout
+    lookback: 80
+    smooth: null  # null means use default (lookback/4)
+    forecast_scalar: null
+
+  mr_wings_4:
+    type: mr_wings
+    Lfast: 4
+    forecast_scalar: null
+
+  accel_4:
+    type: accel
+    Lfast: 4
+    forecast_scalar: null
+
+# ============================================================================
+# BACKTEST PARAMETERS
+# ============================================================================
+backtest:
+  start_date: "2000-01-01"
+  end_date: null
+
+  notional_trading_capital: 1000000
+  base_currency: "USD"
+  percentage_vol_target: 18
+
+  forecast_weight_method: "shrinkage"
+  forecast_scalar_pooling: false
+  instrument_weight_method: "shrinkage"
+  use_estimations: true
+
+# ============================================================================
+# OUTPUT SETTINGS
+# ============================================================================
+output:
+  save_results: true
+  output_dir: "outputs"
+  plot_filename: "mixed_strategies.png"
+  export_stats: true
+  stats_filename: "mixed_strategies_stats.csv"
