@@ -12,3 +12,6 @@ __pycache__/
 
 # Ignore Jupyter checkpoints
 .ipynb_checkpoints/
+
+# Ignore venv
+.pst-venv/
