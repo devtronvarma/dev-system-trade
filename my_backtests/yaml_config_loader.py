@@ -218,10 +218,11 @@ class YAMLConfigLoader:
         # Parse backtest parameters
         params = self._parse_backtest_params()
 
-        # Get forecast_weights and instrument_weights if provided
+        # Get forecast_weights, instrument_weights, and rule_variations if provided
         # These are optional and will be None if not specified
         forecast_weights = self.raw_config.get('forecast_weights')
         instrument_weights = self.raw_config.get('instrument_weights')
+        rule_variations = self.raw_config.get('rule_variations')
 
         # Create BacktestConfig
         config = BacktestConfig(
@@ -229,6 +230,7 @@ class YAMLConfigLoader:
             trading_rules=trading_rules,
             forecast_weights=forecast_weights,
             instrument_weights=instrument_weights,
+            rule_variations=rule_variations,
             **params
         )
 

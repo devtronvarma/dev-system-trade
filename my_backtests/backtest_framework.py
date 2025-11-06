@@ -95,7 +95,8 @@ class BacktestConfig:
         instrument_weights=None,
         forecast_cap=20.0,
         forecast_div_multiplier=None,
-        instrument_div_multiplier=None
+        instrument_div_multiplier=None,
+        rule_variations=None
     ):
         """
         Initialize backtest configuration.
@@ -117,6 +118,7 @@ class BacktestConfig:
             forecast_cap: Maximum forecast value (default 20.0, per Rob Carver)
             forecast_div_multiplier: Fixed FDM value (None = estimate from data)
             instrument_div_multiplier: Fixed IDM value (None = estimate from data)
+            rule_variations: Dict of {instrument: [rule_list]} specifying which rules to use per instrument for shrinkage estimation
         """
         self.instruments = instruments
         self.trading_rules = trading_rules
@@ -134,6 +136,7 @@ class BacktestConfig:
         self.forecast_cap = forecast_cap
         self.forecast_div_multiplier = forecast_div_multiplier
         self.instrument_div_multiplier = instrument_div_multiplier
+        self.rule_variations = rule_variations
 
 
 class BacktestRunner:
@@ -169,11 +172,13 @@ class BacktestRunner:
         # Add trading rules
         my_config.trading_rules = self.config.trading_rules
 
-        # Add forecast_weights and instrument_weights if provided
+        # Add forecast_weights, instrument_weights, and rule_variations if provided
         if self.config.forecast_weights is not None:
             my_config.forecast_weights = self.config.forecast_weights
         if self.config.instrument_weights is not None:
             my_config.instrument_weights = self.config.instrument_weights
+        if self.config.rule_variations is not None:
+            my_config.rule_variations = self.config.rule_variations
 
         # Forecast cap (Rob Carver uses 20)
         my_config.forecast_cap = self.config.forecast_cap
