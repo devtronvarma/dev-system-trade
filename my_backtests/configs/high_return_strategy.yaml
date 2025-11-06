@@ -1,14 +1,21 @@
-# Backtest Configuration: High-Return Strategy (10%+ Target)
+# Backtest Configuration: High-Return Strategy (Production Baseline)
 # Optimized configuration focusing on best-performing instruments
+#
+# PERFORMANCE METRICS (NET - 25% vol target):
+# - Annual Return: 8.338%
+# - Sharpe Ratio: 0.47
+# - Max Drawdown: -37.60%
+# - Average Drawdown: -11.8%
+# - Calmar Ratio: 0.22
+# - Annual Volatility: 17.79%
+# - Last Updated: 2025-11-05
 #
 # OPTIMIZATION SUMMARY:
 # - Base: mixed_strategies_validated.yaml (28 instruments, 2.77% return, 0.31 Sharpe)
 # - Filtered: 18 instruments (removed 10 underperformers with negative Sharpe)
-# - Vol target: 22% (up from 15% for +47% leverage)
+# - Vol target: 25% (up from 15% for optimal leverage)
 # - Forecast cap: 25 (up from 20 for +25% signal strength)
-# - Expected: 8-9% return, 0.45-0.50 Sharpe, 15-22% max drawdown
-# - Optimization date: 2025-11-05
-# - FIX: Added NASDAQ + DOW back to fix cross-sectional rules (need 2+ equities)
+# - All 38 trading rules applied via forecast_weights with shrinkage estimation
 #
 # REMOVED INSTRUMENTS (10 underperformers):
 #   GOLD_micro (-0.55% return, -0.413 Sharpe)

@@ -11,9 +11,10 @@
 |--------|-------|-------|
 | **Annual Return** | **8.338%** | 25% vol target |
 | **Sharpe Ratio** | **0.4687** | Risk-adjusted return |
-| **Max Drawdown** | **-11.8%** | Surprisingly low for 25% vol! |
+| **Max Drawdown** | **-37.60%** | Worst single drawdown point |
+| **Average Drawdown** | -11.8% | Mean drawdown across all periods |
 | **Annual Volatility** | 17.79% | Target: 25% |
-| **Calmar Ratio** | 0.2217 | Return/drawdown ratio |
+| **Calmar Ratio** | 0.2217 | Return/max_drawdown ratio |
 | **Sortino Ratio** | 0.6200 | Downside risk adjusted |
 | **Time in Drawdown** | 96.07% | Typical for CTA strategies |
 | **Hit Rate** | 52.63% | Slightly above 50/50 |
@@ -97,7 +98,8 @@
 - NASDAQ improved dramatically: 0.012% → 1.175% (+97x!)
 - But SP500 barely changed and DOW degraded
 - Portfolio return dropped: 8.338% → 6.819% (-18%)
-- Worse drawdown: -11.8% → -13.14%
+- Worse max drawdown: -37.60% → -39.25%
+- Worse average drawdown: -11.8% → -14.37%
 
 **Conclusion**: Individual instrument optimization doesn't guarantee portfolio improvement. Diversification benefits and cross-instrument correlations matter more than single-instrument performance.
 
@@ -125,10 +127,16 @@
 
 ## Notes
 
-- Max drawdown of -11.8% is remarkably low for 25% vol target
+- Max drawdown of -37.60% is typical for 25% vol target CTA strategies
+- Average drawdown of -11.8% shows the portfolio spends most time closer to peaks
 - VIX continues to be star performer (0.57 Sharpe)
 - Equity indices contribute modestly but provide diversification
 - Current config has been stable and well-tested
+
+### Understanding Drawdown Metrics
+- **Max Drawdown (-37.60%)**: The worst single crisis moment - peak to trough decline
+- **Average Drawdown (-11.8%)**: The typical depth below peak across all periods
+- Industry standard reporting uses Max Drawdown for stress testing and risk assessment
 
 ---
 

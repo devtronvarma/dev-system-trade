@@ -1,16 +1,25 @@
-# Backtest Configuration: High-Return Strategy - Equity Optimized (10%+ Target)
+# Backtest Configuration: High-Return Strategy - Equity Optimized (EXPERIMENTAL - FAILED)
 # Asset-class-specific rule optimization using rule_variations
+# ⚠️ WARNING: This config underperforms baseline - use high_return_strategy.yaml instead
 #
-# OPTIMIZATION SUMMARY:
+# PERFORMANCE METRICS (NET - 25% vol target):
+# - Annual Return: 7.596%
+# - Sharpe Ratio: 0.39
+# - Max Drawdown: -39.25%
+# - Average Drawdown: -14.37%
+# - Calmar Ratio: 0.19
+# - Annual Volatility: 19.54%
+# - Last Updated: 2025-11-05
+#
+# OPTIMIZATION ATTEMPT (Failed):
 # - Base: mixed_strategies_validated.yaml (28 instruments, 2.77% return, 0.31 Sharpe)
-# - Filtered: 18 instruments (removed 10 underperformers with negative Sharpe)
-# - Vol target: 22% (up from 15% for +47% leverage)
+# - Filtered: 17 instruments (removed DOW + 10 underperformers)
+# - Vol target: 25% (up from 15% for optimal leverage)
 # - Forecast cap: 25 (up from 20 for +25% signal strength)
 # - EQUITY OPTIMIZATION: 11 pure CTA rules for equities (5 EWMAC + 6 Breakout)
-#   - Removes 16 problematic rules: normmom, accel, relmomentum, assettrend
-#   - Pure trend test showed NASDAQ +2.95%, DOW +1.66%, SP500 +0.70%
-# - Expected: 8.6-8.8% return, 0.48-0.52 Sharpe, ~15% max drawdown
-# - Optimization date: 2025-11-05
+#   - Removed 27 rules including: normmom, accel, relmomentum, assettrend, carry
+#   - Individual equity metrics improved but portfolio metrics degraded
+# - RESULT: Lower return (7.60% vs 8.34%), worse Sharpe (0.39 vs 0.47), worse drawdown (-39% vs -38%)
 #
 # REMOVED INSTRUMENTS (10 underperformers):
 #   GOLD_micro (-0.55% return, -0.413 Sharpe)
@@ -24,17 +33,17 @@
 #   SEK (0.03% return, 0.033 Sharpe - removed for concentration)
 #   CAD (0.07% return, 0.065 Sharpe - removed for concentration)
 
-name: "High-Return Strategy (10%+ Target)"
-description: "Concentrated portfolio of 18 best performers with 22% vol target and 25 forecast cap"
+name: "High-Return Strategy - Equity Optimized (FAILED EXPERIMENT)"
+description: "17 instruments with equity-specific rules via rule_variations - underperforms baseline"
 
 # ============================================================================
-# INSTRUMENTS - 18-Instrument Optimized Universe
+# INSTRUMENTS - 17-Instrument Universe
 # ============================================================================
 # Selected for positive Sharpe ratio and strong performance
 # Maintains diversification across all 7 asset classes
-# NOTE: 3 equities required for cross-sectional rules to function properly
+# ⚠️ NOTE: Removed DOW (17 vs 18 instruments) - hurt cross-sectional rule performance
 instruments:
-  # EQUITY INDICES (2) - Pure CTA trend-following
+  # EQUITY INDICES (2) - Pure CTA trend-following (27 rules removed via rule_variations)
   - SP500
   - NASDAQ
 

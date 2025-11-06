@@ -1,0 +1,448 @@
+#YAML
+start_date: 2003-01-01
+
+# Portfolio settings
+percentage_vol_target: 25
+notional_trading_capital: 100_000_000
+base_currency: "USD"
+
+# Estimations
+use_forecast_weight_estimates: True
+use_forecast_div_mult_estimates: True
+use_instrument_weight_estimates: True
+use_instrument_div_mult_estimates: True
+use_forecast_scale_estimates: True
+
+# Trading Rules
+volatility_calculation:
+  func: "sysquant.estimators.vol.mixed_vol_calc"
+  days: 35
+  min_periods: 10
+  vol_abs_min: 0.0000000001
+  slow_vol_years: 20
+  proportion_of_slow_vol: 0.35
+  backfill: True
+
+# Vol Attenuation
+use_attenuation:
+  - 'breakout10'
+  - 'breakout20'
+  - 'breakout40'
+  - 'breakout80'
+  - 'breakout160'
+  - 'breakout320'
+  - 'relmomentum10'
+  - 'relmomentum20'
+  - 'relmomentum40'
+  - 'relmomentum80'
+  - 'mrinasset1000'
+  - 'assettrend2'
+  - 'assettrend4'
+  - 'assettrend8'
+  - 'assettrend16'
+  - 'assettrend32'
+  - 'assettrend64'
+  - 'normmom2'
+  - 'normmom4'
+  - 'normmom8'
+  - 'normmom16'
+  - 'normmom32'
+  - 'normmom64'
+  - 'momentum4'
+  - 'momentum8'
+  - 'momentum16'
+  - 'momentum32'
+  - 'momentum64'
+
+# Rule Variations
+rule_variations:
+  defaults: &default_rules
+    - breakout10
+    - breakout20
+    - breakout40
+    - breakout80
+    - breakout160
+    - breakout320
+    - relmomentum10
+    - relmomentum20
+    - relmomentum40
+    - relmomentum80
+    - mrinasset1000
+    - carry10
+    - carry30
+    - carry60
+    - carry125
+    - assettrend2
+    - assettrend4
+    - assettrend8
+    - assettrend16
+    - assettrend32
+    - assettrend64
+    - normmom2
+    - normmom4
+    - normmom8
+    - normmom16
+    - normmom32
+    - normmom64
+    - momentum4
+    - momentum8
+    - momentum16
+    - momentum32
+    - momentum64
+    - relcarry
+    - accel16
+    - accel32
+    - accel64
+  no_cross_sectional: &no_cross_rules
+    - breakout10
+    - breakout20
+    - breakout40
+    - breakout80
+    - breakout160
+    - breakout320
+    - carry10
+    - carry30
+    - carry60
+    - carry125
+    - assettrend2
+    - assettrend4
+    - assettrend8
+    - assettrend16
+    - assettrend32
+    - assettrend64
+    - normmom2
+    - normmom4
+    - normmom8
+    - normmom16
+    - normmom32
+    - normmom64
+    - momentum4
+    - momentum8
+    - momentum16
+    - momentum32
+    - momentum64
+    - accel16
+    - accel32
+    - accel64
+  SP500: *default_rules
+  NASDAQ: *default_rules
+  DOW: *default_rules
+  US2: *default_rules
+  US10: *default_rules
+  BUND: *default_rules
+  JPY: *default_rules
+  EUR: *default_rules
+  NZD: *default_rules
+  CORN: *no_cross_rules
+  CRUDE_W: *default_rules
+  GAS_US_mini: *default_rules
+  GOLD_micro: *default_rules
+  SILVER: *default_rules
+  VIX: *no_cross_rules
+
+# Trading Rule Definitions
+trading_rules:
+# breakout rules
+  breakout10:
+    function: systems.provided.rules.breakout.breakout
+    data:
+      - "rawdata.get_daily_prices"
+    other_args:
+      lookback: 10
+  breakout20:
+    function: systems.provided.rules.breakout.breakout
+    data:
+      - "rawdata.get_daily_prices"
+    other_args:
+      lookback: 20
+  breakout40:
+    function: systems.provided.rules.breakout.breakout
+    data:
+      - "rawdata.get_daily_prices"
+    other_args:
+      lookback: 40
+  breakout80:
+    function: systems.provided.rules.breakout.breakout
+    data:
+      - "rawdata.get_daily_prices"
+    other_args:
+      lookback: 80
+  breakout160:
+    function: systems.provided.rules.breakout.breakout
+    data:
+      - "rawdata.get_daily_prices"
+    other_args:
+      lookback: 160
+  breakout320:
+    function: systems.provided.rules.breakout.breakout
+    data:
+      - "rawdata.get_daily_prices"
+    other_args:
+      lookback: 320
+
+# relative momentum rules
+  relmomentum10:
+    function: systems.provided.rules.rel_mom.relative_momentum
+    data:
+        - "rawdata.get_cumulative_daily_vol_normalised_returns"
+        - "rawdata.normalised_price_for_asset_class"
+    other_args:
+      horizon: 10
+  relmomentum20:
+    function: systems.provided.rules.rel_mom.relative_momentum
+    data:
+        - "rawdata.get_cumulative_daily_vol_normalised_returns"
+        - "rawdata.normalised_price_for_asset_class"
+    other_args:
+      horizon: 20
+  relmomentum40:
+    function: systems.provided.rules.rel_mom.relative_momentum
+    data:
+        - "rawdata.get_cumulative_daily_vol_normalised_returns"
+        - "rawdata.normalised_price_for_asset_class"
+    other_args:
+      horizon: 40
+  relmomentum80:
+    function: systems.provided.rules.rel_mom.relative_momentum
+    data:
+        - "rawdata.get_cumulative_daily_vol_normalised_returns"
+        - "rawdata.normalised_price_for_asset_class"
+    other_args:
+      horizon: 80
+
+# cross sectional mean reversion
+  mrinasset1000:
+    function: systems.provided.rules.cs_mr.cross_sectional_mean_reversion
+    data:
+      - "rawdata.get_cumulative_daily_vol_normalised_returns"
+      - "rawdata.normalised_price_for_asset_class"
+    other_args:
+      horizon: 1000
+
+# carry rules
+  carry10:
+    function: systems.provided.rules.carry.carry
+    data:
+      - "rawdata.raw_carry"
+    other_args:
+      smooth_days: 10
+  carry30:
+    function: systems.provided.rules.carry.carry
+    data:
+      - "rawdata.raw_carry"
+    other_args:
+      smooth_days: 30
+  carry60:
+    function: systems.provided.rules.carry.carry
+    data:
+      - "rawdata.raw_carry"
+    other_args:
+      smooth_days: 60
+  carry125:
+    function: systems.provided.rules.carry.carry
+    data:
+      - "rawdata.raw_carry"
+    other_args:
+      smooth_days: 125
+
+# asset trend rules
+  assettrend2:
+    function: systems.provided.rules.ewmac.ewmac_calc_vol
+    data:
+      - "rawdata.normalised_price_for_asset_class"
+    other_args:
+        Lfast: 2
+        Lslow: 8
+  assettrend4:
+    function: systems.provided.rules.ewmac.ewmac_calc_vol
+    data:
+      - "rawdata.normalised_price_for_asset_class"
+    other_args:
+        Lfast: 4
+        Lslow: 16
+  assettrend8:
+    function: systems.provided.rules.ewmac.ewmac_calc_vol
+    data:
+      - "rawdata.normalised_price_for_asset_class"
+    other_args:
+        Lfast: 8
+        Lslow: 32
+  assettrend16:
+    function: systems.provided.rules.ewmac.ewmac_calc_vol
+    data:
+      - "rawdata.normalised_price_for_asset_class"
+    other_args:
+        Lfast: 16
+        Lslow: 64
+  assettrend32:
+    function: systems.provided.rules.ewmac.ewmac_calc_vol
+    data:
+      - "rawdata.normalised_price_for_asset_class"
+    other_args:
+        Lfast: 32
+        Lslow: 128
+  assettrend64:
+    function: systems.provided.rules.ewmac.ewmac_calc_vol
+    data:
+      - "rawdata.normalised_price_for_asset_class"
+    other_args:
+        Lfast: 64
+        Lslow: 256
+
+# normalized momentum rules
+  normmom2:
+    function: systems.provided.rules.ewmac.ewmac_calc_vol
+    data:
+      - "rawdata.get_cumulative_daily_vol_normalised_returns"
+    other_args:
+        Lfast: 2
+        Lslow: 8
+  normmom4: 
+    function: systems.provided.rules.ewmac.ewmac_calc_vol
+    data:
+      - "rawdata.get_cumulative_daily_vol_normalised_returns"
+    other_args:
+        Lfast: 4
+        Lslow: 16
+  normmom8:
+    function: systems.provided.rules.ewmac.ewmac_calc_vol
+    data:
+      - "rawdata.get_cumulative_daily_vol_normalised_returns"
+    other_args:
+        Lfast: 8
+        Lslow: 32
+  normmom16:  
+    function: systems.provided.rules.ewmac.ewmac_calc_vol
+    data:
+      - "rawdata.get_cumulative_daily_vol_normalised_returns"
+    other_args:
+        Lfast: 16
+        Lslow: 64
+  normmom32:  
+    function: systems.provided.rules.ewmac.ewmac_calc_vol
+    data:
+      - "rawdata.get_cumulative_daily_vol_normalised_returns"
+    other_args:
+        Lfast: 32
+        Lslow: 128
+  normmom64:
+    function: systems.provided.rules.ewmac.ewmac_calc_vol
+    data:
+      - "rawdata.get_cumulative_daily_vol_normalised_returns"
+    other_args:
+        Lfast: 64
+        Lslow: 256
+
+# momentum
+  momentum4:
+    function: systems.provided.rules.ewmac.ewmac
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 4
+      Lslow: 16
+  momentum8:
+    function: systems.provided.rules.ewmac.ewmac
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 8
+      Lslow: 32
+  momentum16:
+    function: systems.provided.rules.ewmac.ewmac
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 16
+      Lslow: 64  
+  momentum32:
+    function: systems.provided.rules.ewmac.ewmac
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 32
+      Lslow: 128
+  momentum64:
+    function: systems.provided.rules.ewmac.ewmac
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 64
+      Lslow: 256
+
+# relative carry
+  relcarry:
+    function: systems.provided.rules.carry.relative_carry
+    data:
+      - "rawdata.smoothed_carry"
+      - "rawdata.median_carry_for_asset_class"
+# SKIP SKEW TRADES FOR NOW
+
+# acceleration rules
+  accel16:
+    function: systems.provided.rules.accel.accel
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 16
+  accel32:
+    function: systems.provided.rules.accel.accel
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 32
+  accel64:
+    function: systems.provided.rules.accel.accel
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 32
+
+forecast_cap: 20.0
+
+instruments:
+  - SP500
+  - NASDAQ
+  - DOW
+  - US2
+  - US10
+  - BUND
+  - JPY
+  - EUR
+  - NZD
+  - CORN
+  - CRUDE_W
+  - GAS_US_mini
+  - GOLD_micro
+  - SILVER
+  - VIX
+
+
+# Forecast Scalar Estimation
+forecast_scalar_estimate:
+  pool_instruments: False  # per-instrument scalars
+  min_periods: 250
+  window: 250000
+
+# Forecast Weight Estimation
+forecast_weight_estimate:
+  method: shrinkage
+  pool_gross_returns: True
+  equalise_vols: True
+  shrinkage_SR: 0.9
+  shrinkage_corr: 0.5
+
+# Instrument Weight Estimation
+instrument_weight_estimate:
+  method: shrinkage
+  equalise_vols: True
+  shrinkage_mean: 1.0
+  shrinkage_corr: 0.5
